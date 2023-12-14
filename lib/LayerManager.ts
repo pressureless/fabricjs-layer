@@ -348,7 +348,8 @@ class LayerManager implements LayerManagerIface {
     };
     this._activeLayer.fire(le);
 
-    console.log("added", e.target, "to", this._activeLayer);
+    // console.log("added");
+    // console.log("added", e.target, "to", this._activeLayer);
   }
 
   /**
@@ -356,8 +357,25 @@ class LayerManager implements LayerManagerIface {
    *
    * @param e - Fabric.js event
    */
-  private onObjectRemove({ target }: fabric.IEvent) {
-    console.log("removed", target);
+  private onObjectRemove(e: fabric.IEvent) {
+    // At this time, object is already deleted, not in this.canvas._objects any more.
+    // assume removement can only happen at activeLayer
+    const index = getIndexOf(e.target, this.canvas._objects);
+    // console.log("OnRemove current total length:", this.canvas._objects.length)
+    // console.log("Rm index:", index, ", startIndex:", this._activeLayer.startIndex, ", endIndex:", this._activeLayer.endIndex);
+    this._activeLayer.endIndex--;
+    // decrease startIndex and endIndex of subsequent layers
+    for (let i = this.activeLayerIndex + 1; i < this._layers.length; i++) {
+      this._layers[i].startIndex--;
+      this._layers[i].endIndex--;
+    }
+    // fire object:add event
+    const le: LayerEvent = {
+      type: "object:remove",
+      event: e
+    };
+    this._activeLayer.fire(le);
+    // console.log("removed", e.target);
   }
 
   public addListener(listener: LayerManagerEventListener): void {
