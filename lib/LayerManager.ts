@@ -319,14 +319,13 @@ class LayerManager implements LayerManagerIface {
    */
   private onObjectAdd(e: fabric.IEvent) {
     const index = getIndexOf(e.target, this.canvas._objects);
-
     // check object position in the stack
     if (index < this._activeLayer.startIndex) {
       // object needs to be pushed to foreground
       this.canvas._objects.splice(index, 1);
       this.canvas._objects.splice(this._activeLayer.endIndex, 0, e.target);
       this.canvas.renderOnAddRemove && this.canvas.requestRenderAll();
-    } else if (index > this._activeLayer.endIndex + 1) {
+    } else if (index > this._activeLayer.endIndex) {
       // object needs to be pushed to background
       this.canvas._objects.splice(index, 1);
       this.canvas._objects.splice(this._activeLayer.endIndex, 0, e.target);
@@ -349,7 +348,7 @@ class LayerManager implements LayerManagerIface {
     this._activeLayer.fire(le);
 
     // console.log("added");
-    // console.log("added", e.target, "to", this._activeLayer);
+    // console.log("added", e.target, "to", this._activeLayer, ", index:", this.activeLayerIndex);
   }
 
   /**
