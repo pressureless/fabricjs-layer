@@ -330,6 +330,7 @@ class LayerManager implements LayerManagerIface {
       this.canvas._objects.splice(index, 1);
       this.canvas._objects.splice(this._activeLayer.endIndex, 0, e.target);
       this.canvas.renderOnAddRemove && this.canvas.requestRenderAll();
+      this._activeLayer.endIndex++;
     } else {
       this._activeLayer.endIndex++;
     }
