@@ -6,10 +6,12 @@
  */
 import { sortedIndex } from "sortedindex";
 import Layer, { LayerIface } from "./Layer";
+import StateInfo, { StateInfoIface }  from "./StateInfo";
 import { LayerEvent } from "./LayerEvent";
 import { LayerManagerEvent } from "./LayerManagerEvent";
 import { LayerManagerEventListener } from "./LayerManagerEventListener";
 import { getIndexOf } from "./utils";
+
 
 export interface LayerManagerIface {
   /**
@@ -20,6 +22,10 @@ export interface LayerManagerIface {
    * Active layer index
    */
   activeLayerIndex: number;
+  /**
+   * Enable event handling
+   */
+  enableEvt: boolean;
   /**
    * Array of layers (copy)
    */
@@ -86,6 +92,11 @@ export interface LayerManagerIface {
    */
   moveLayer(from: number, to: number): void;
 
+
+  saveState(): StateInfoIface;
+
+  restoreState(state: StateInfoIface): void;
+
   /**
    * Add event listener
    *
@@ -123,6 +134,9 @@ class LayerManager implements LayerManagerIface {
   public get activeLayerIndex() {
     return this._activeLayerIndex;
   }
+  public get enableEvt(){
+    return this._enableEvt;
+  }
   public set activeLayerIndex(value: number) {
     if (value < 0 || value >= this._layers.length) {
       throw new Error("Layer index out of bounds");
@@ -138,6 +152,7 @@ class LayerManager implements LayerManagerIface {
     });
   }
   private _activeLayerIndex: number;
+  private _enableEvt: boolean;
 
   public get layers(): LayerIface[] {
     return this._layers.slice();
@@ -158,6 +173,7 @@ class LayerManager implements LayerManagerIface {
     this._activeLayerIndex = 0;
     this._layers = [this._activeLayer];
     this._listeners = [];
+    this._enableEvt = true;
     this.onObjectAdd = this.onObjectAdd.bind(this);
     this.onObjectRemove = this.onObjectRemove.bind(this);
     canvas.on("object:added", this.onObjectAdd);
@@ -264,6 +280,22 @@ class LayerManager implements LayerManagerIface {
     });
   }
 
+  public saveState(): StateInfoIface{
+    let state = new StateInfo;
+    for (let i = 0; i < this._layers.length; i++) {
+      state.startIndices.push(this._layers[i].startIndex);
+      state.endIndices.push(this._layers[i].endIndex);
+    }
+    return state;
+  }
+
+  public restoreState(state: StateInfoIface){
+    for (let i = 0; i < this._layers.length; i++) {
+      this._layers[i].startIndex = state.startIndices[i];
+      this._layers[i].endIndex = state.endIndices[i];
+    }
+  }
+
   public moveLayer(from: number, to: number) {
     const layer = this.getLayer(from);
     this._layers.splice(from, 1);
@@ -318,6 +350,9 @@ class LayerManager implements LayerManagerIface {
    * @param e - Fabric.js event
    */
   private onObjectAdd(e: fabric.IEvent) {
+    if(!this._enableEvt){
+      return;
+    }
     const index = getIndexOf(e.target, this.canvas._objects);
     // check object position in the stack
     if (index < this._activeLayer.startIndex) {
@@ -358,6 +393,9 @@ class LayerManager implements LayerManagerIface {
    * @param e - Fabric.js event
    */
   private onObjectRemove(e: fabric.IEvent) {
+    if(!this._enableEvt){
+      return;
+    }
     // At this time, object is already deleted, not in this.canvas._objects any more.
     // assume removement can only happen at activeLayer
     const index = getIndexOf(e.target, this.canvas._objects);
