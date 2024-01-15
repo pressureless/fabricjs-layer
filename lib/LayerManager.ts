@@ -129,6 +129,10 @@ class LayerManager implements LayerManagerIface {
     }
     this.activeLayerIndex = index;
   }
+  public set enableEvt(value: boolean){
+    this._enableEvt = value;
+  }
+  
   private _activeLayer: Layer;
 
   public get activeLayerIndex() {
