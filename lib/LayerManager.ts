@@ -97,6 +97,8 @@ export interface LayerManagerIface {
 
   restoreState(state: StateInfoIface): void;
 
+  reset(): void;
+
   /**
    * Add event listener
    *
@@ -132,7 +134,7 @@ class LayerManager implements LayerManagerIface {
   public set enableEvt(value: boolean){
     this._enableEvt = value;
   }
-  
+
   private _activeLayer: Layer;
 
   public get activeLayerIndex() {
@@ -284,6 +286,13 @@ class LayerManager implements LayerManagerIface {
     });
   }
 
+  public reset(): void{
+    for (let i = 0; i < this._layers.length; i++) {
+      this._layers[i].startIndex = 0;
+      this._layers[i].endIndex = 0;
+    }
+  }
+
   public saveState(): StateInfoIface{
     let state = new StateInfo;
     for (let i = 0; i < this._layers.length; i++) {
@@ -387,7 +396,7 @@ class LayerManager implements LayerManagerIface {
     };
     this._activeLayer.fire(le);
 
-    // console.log("added");
+    // console.log(this._enableEvt);
     // console.log("added", e.target, "to", this._activeLayer, ", index:", this.activeLayerIndex);
   }
 
